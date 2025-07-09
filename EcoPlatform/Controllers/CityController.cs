@@ -1,4 +1,5 @@
 ﻿using EcoPlatform.Data;
+using EcoPlatform.DTOs.City;
 using EcoPlatform.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,32 +17,32 @@ namespace EcoPlatform.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<City>>> GetCities()
+        public async Task<ActionResult<IEnumerable<CityGetDTO>>> GetCities()
         {
-            return await _context.Cities.ToListAsync();
+            return await _context.Cities.Select(c => new CityGetDTO(c)).ToListAsync();
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<City>> GetCity(int id)
+        public async Task<ActionResult<CityGetDTO>> GetCity(int id)
         {
-            var city = await _context.Cities.FindAsync(id);
+            var city = await _context.Cities.Include(c => c.Projects).FirstOrDefaultAsync(c => c.Id == id);
             if (city == null)
-            {
                 return NotFound();
-            }
-            return city;
+
+            return new CityGetDTO(city);
         }
 
         [HttpPost]
-        public async Task<ActionResult<City>> CreateCity(City city)
+        public async Task<ActionResult<CityGetDTO>> CreateCity(CityUpsertDTO city)
         {
             if (city == null)
-            {
                 return BadRequest("City cannot be null.");
-            }
-            _context.Cities.Add(city);
+
+            City c = City.FromDTO(city);
+
+            _context.Cities.Add(c);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetCity), new { id = city.Id }, city);
+            return CreatedAtAction(nameof(GetCity), new { id = c.Id }, new CityGetDTO(c));
         }
     }
 }
