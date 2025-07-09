@@ -11,10 +11,7 @@ namespace EcoPlatform.Controllers
     public class ProjectController : ControllerBase
     {
         private readonly EcoPlatformContext _context;
-        public ProjectController(EcoPlatformContext context)
-        {
-            _context = context;
-        }
+        public ProjectController(EcoPlatformContext context) => _context = context;
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProjectGetDTO>>> GetProjects()

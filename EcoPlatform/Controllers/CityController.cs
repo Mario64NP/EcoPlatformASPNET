@@ -11,15 +11,12 @@ namespace EcoPlatform.Controllers
     public class CityController : ControllerBase
     {
         private readonly EcoPlatformContext _context;
-        public CityController(EcoPlatformContext context)
-        {
-            _context = context;
-        }
+        public CityController(EcoPlatformContext context) => _context = context;
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CityGetDTO>>> GetCities()
         {
-            return await _context.Cities.Select(c => new CityGetDTO(c)).ToListAsync();
+            return await _context.Cities.Include(c => c.Projects).Select(c => new CityGetDTO(c)).ToListAsync();
         }
 
         [HttpGet("{id}")]
