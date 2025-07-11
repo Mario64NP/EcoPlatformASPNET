@@ -1,4 +1,7 @@
 using EcoPlatform.Data;
+using EcoPlatform.Models;
+using EcoPlatform.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 
@@ -15,6 +18,9 @@ builder.Services.AddDbContext<EcoPlatformContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 var app = builder.Build();
 
