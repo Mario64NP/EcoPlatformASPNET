@@ -1,11 +1,13 @@
 ﻿using EcoPlatform.Data;
 using EcoPlatform.DTOs.City;
 using EcoPlatform.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace EcoPlatform.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class CityController : ControllerBase
@@ -40,6 +42,47 @@ namespace EcoPlatform.Controllers
             _context.Cities.Add(c);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetCity), new { id = c.Id }, new CityGetDTO(c));
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]
+        public async Task<ActionResult<CityGetDTO>> EditCity(CityUpsertDTO city, int id)
+        {
+            if (city == null)
+                return BadRequest("City cannot be null.");
+
+            var c = await _context.Cities.FindAsync(id);
+            
+            if (c == null)
+                return NotFound();
+
+            c.Name = city.Name;
+            c.Region = city.Region;
+            c.Country = city.Country;
+            c.Latitude = city.Latitude;
+            c.Longitude = city.Longitude;
+
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetCity), new { id = c.Id }, new CityGetDTO(c));
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCity(int id)
+        {
+            var city = await _context.Cities.FindAsync(id);
+
+            if (city == null)
+                return NotFound();
+
+            if (await _context.Projects.AnyAsync(p => p.CityId == id))
+                return Conflict("Cannot delete city because it has linked projects.");
+
+            _context.Cities.Remove(city);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

@@ -1,11 +1,13 @@
 ﻿using EcoPlatform.Data;
 using EcoPlatform.DTOs.Project;
 using EcoPlatform.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace EcoPlatform.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ProjectController : ControllerBase
@@ -45,6 +47,44 @@ namespace EcoPlatform.Controllers
             _context.Projects.Add(p);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetProject), new { id = p.Id }, new ProjectGetDTO(p));
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]
+        public async Task<ActionResult<ProjectGetDTO>> EditProject(ProjectUpsertDTO project, int id)
+        {
+            if (project == null)
+                return BadRequest("Project cannot be null.");
+
+            var p = await _context.Projects.FindAsync(id);
+
+            if (p == null)
+                return NotFound();
+
+            if (!await _context.Cities.AnyAsync(c => c.Id == project.CityId))
+                return BadRequest("Invalid CityId.");
+
+            p.Name = project.Name;
+            p.Description = project.Description;
+            p.CityId = project.CityId;
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetProject), new { id = p.Id }, new ProjectGetDTO(p));
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProject(int id)
+        {
+            var project = await _context.Projects.FindAsync(id);
+
+            if (project == null)
+                return NotFound();
+
+            _context.Projects.Remove(project);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

@@ -18,6 +18,12 @@ namespace EcoPlatform.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Project>()
+                .HasOne(p => p.City)
+                .WithMany(c => c.Projects)
+                .HasForeignKey(p => p.CityId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Projects)
                 .WithMany(p => p.Users)
